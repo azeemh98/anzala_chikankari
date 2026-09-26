@@ -3,18 +3,17 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('node:path');
-const crypto = require('node:crypto');
 const { hashPassword } = require('../lib/auth');
 const { slugify, getSettings, DEFAULT_SETTINGS } = require('../lib/db');
 const ah = require('../lib/asyncHandler');
 const v = require('../lib/logic');
+const { uploadImage } = require('../lib/storage');
 const { cancelOrder } = require('./store');
 
+// Files are held in memory just long enough to stream to Supabase Storage — nothing touches local disk,
+// since the host's filesystem (Vercel included) may be read-only or ephemeral.
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: path.join(__dirname, '..', 'public', 'uploads'),
-    filename: (_req, file, cb) => cb(null, `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${path.extname(file.originalname).toLowerCase()}`),
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024, files: 6 },
   fileFilter: (_req, file, cb) => cb(null, ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(path.extname(file.originalname).toLowerCase())),
 });
@@ -146,10 +145,11 @@ module.exports = function adminRoutes(db) {
     res.json({ ok: true, archived: false });
   }));
 
-  r.post('/uploads', upload.array('images', 6), (req, res) => {
+  r.post('/uploads', upload.array('images', 6), ah(async (req, res) => {
     if (!req.files?.length) throw new v.HttpError(400, 'No valid image files were uploaded (jpg, png, webp, gif only, max 5MB each).');
-    res.status(201).json({ urls: req.files.map((f) => `/uploads/${f.filename}`) });
-  });
+    const urls = await Promise.all(req.files.map(uploadImage));
+    res.status(201).json({ urls });
+  }));
 
   // ---------- orders ----------
 
