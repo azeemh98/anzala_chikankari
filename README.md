@@ -1,8 +1,9 @@
-# Anzala Chikankari
+# ANJALA Chikankari
 
-A full e-commerce site for a Lucknowi chikankari fashion brand: storefront, shopping
-cart & checkout, a booking engine for in-store/bridal appointments, customer accounts,
-and an admin panel with a dashboard, catalogue, order and booking management.
+A full e-commerce site for a Lucknowi chikankari fashion brand shipping worldwide: storefront,
+shopping cart & checkout (USD, international shipping), personalized hand-embroidered name art,
+a booking engine for in-store/bridal appointments, customer accounts, and an admin panel with a
+dashboard, catalogue, order and booking management.
 
 Single Node.js/Express app, backed by Postgres (built and deployed against Supabase).
 Deployed on Vercel as a single serverless function; product images are stored in
@@ -16,8 +17,11 @@ Supabase Storage since serverless hosts don't offer a persistent local filesyste
 **Storefront**
 - Home, category browsing, search & filters (price, category, sort)
 - Product detail pages with image gallery, sizes, stock, ratings & verified reviews
+- Personalized Name Art: a "personalize with a name" text input on eligible products;
+  each embroidered name becomes its own cart line (never merged with another)
 - Cart drawer with live server-side pricing, coupons and free-shipping threshold
-- Checkout with address form, COD / UPI payment, and stock-safe order placement
+- International checkout: any country, generalized phone/postal-code validation, Cash
+  on Delivery (India only, enforced server-side) or bank/UPI transfer (worldwide)
 - Customer accounts: order history + cancellation, appointment history, wishlist, profile
 - Guest order tracking by order number + email
 - Booking engine: pick a service, see a live calendar with real slot availability

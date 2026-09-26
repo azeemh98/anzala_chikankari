@@ -142,7 +142,10 @@ configurable "book up to N days ahead" cap.
   strike-through "compare-at" price (for showing a discount), stock, sizes
   (comma-separated, e.g. `S,M,L,XL`), up to 6 images, **Featured** (shows on the
   homepage), **Active** (visible in the store at all — turn off instead of deleting
-  to temporarily hide something).
+  to temporarily hide something), **Personalizable** (adds a "personalize with a
+  name" text field on the product page — used for the Name Art line; each
+  customer's embroidered text is captured per order line and shown in the order
+  detail here in the admin panel).
 - **Images** upload straight to Supabase Storage (public `product-images` bucket) —
   drag in files, remove any before saving, reorder isn't currently supported (first
   image is always the primary/thumbnail).
