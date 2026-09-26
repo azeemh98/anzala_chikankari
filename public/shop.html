@@ -3,75 +3,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shop | Anzala Chikankari</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Shop | ANJALA Chikankari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <div id="headerMount"></div>
 
-<section class="section container">
-  <h1 class="section-title" id="pageTitle" style="font-size:34px;">Shop All</h1>
-  <div class="products-toolbar">
-    <div class="filters" id="categoryChips"></div>
-    <div class="filters">
-      <input type="number" id="minPrice" placeholder="Min ₹" style="width:90px">
-      <input type="number" id="maxPrice" placeholder="Max ₹" style="width:90px">
-      <select id="sortSelect">
-        <option value="">Sort: Featured</option>
-        <option value="newest">Newest</option>
-        <option value="price_asc">Price: Low to High</option>
-        <option value="price_desc">Price: High to Low</option>
-        <option value="rating">Top Rated</option>
-      </select>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow-row">
+        <svg class="flourish-icon" viewBox="0 0 100 100"><use href="#motif-paisley"/></svg>
+        <span class="eyebrow" id="pageEyebrow">The Collection</span>
+        <svg class="flourish-icon flip" viewBox="0 0 100 100"><use href="#motif-paisley"/></svg>
+      </div>
+      <h2 id="pageTitle">Made by Hand, Worn Anywhere</h2>
+      <p>Prices in USD — duties included for the US, UK, Canada, Australia and the EU.</p>
     </div>
+
+    <div class="filters" id="filters"></div>
+
+    <div class="grid" id="productGrid"></div>
   </div>
-  <div class="product-grid" id="productGrid"></div>
 </section>
 
 <div id="footerMount"></div>
 <script src="/js/app.js"></script>
 <script>
 let categories = [];
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
 async function init() {
   await mountChrome('shop');
   categories = await api.get('/categories');
-  renderChips();
-  document.getElementById('minPrice').addEventListener('change', load);
-  document.getElementById('maxPrice').addEventListener('change', load);
-  document.getElementById('sortSelect').addEventListener('change', load);
+  renderFilters();
+  const activeCat = categories.find(c => c.slug === qs('category'));
+  if (activeCat) { document.getElementById('pageEyebrow').textContent = activeCat.name; document.getElementById('pageTitle').textContent = activeCat.name; }
   const q = qs('q');
   if (q) document.getElementById('pageTitle').textContent = `Results for "${q}"`;
   load();
 }
 
-function renderChips() {
+function renderFilters() {
   const active = qs('category');
-  document.getElementById('categoryChips').innerHTML = ['all', ...categories.map(c => c.slug)].map(slug => {
+  document.getElementById('filters').innerHTML = ['all', ...categories.map(c => c.slug)].map(slug => {
     const label = slug === 'all' ? 'All' : categories.find(c => c.slug === slug).name;
-    return `<button class="chip ${(!active && slug === 'all') || active === slug ? 'active' : ''}" data-slug="${slug}">${label}</button>`;
-  }).join('');
-  document.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
+    return `<button class="pill ${(!active && slug === 'all') || active === slug ? 'active' : ''}" data-slug="${slug}">${esc(label)}</button>`;
+  }).join('') + `
+    <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
+      <input type="text" id="shopSearch" placeholder="Search styles…" value="${esc(qs('q') || '')}"></div>
+    <select id="sortSelect" style="padding:9px 16px;border:1px solid var(--line);border-radius:20px;font-size:12.5px;background:#fff;font-family:inherit;">
+      <option value="">Sort: Featured</option>
+      <option value="newest">Newest</option>
+      <option value="price_asc">Price: Low to High</option>
+      <option value="price_desc">Price: High to Low</option>
+      <option value="rating">Top Rated</option>
+    </select>`;
+  document.getElementById('shopSearch').addEventListener('input', debounce(load, 300));
+  document.getElementById('sortSelect').addEventListener('change', load);
+  document.querySelectorAll('.pill').forEach(chip => chip.addEventListener('click', () => {
     const url = new URL(window.location);
     if (chip.dataset.slug === 'all') url.searchParams.delete('category'); else url.searchParams.set('category', chip.dataset.slug);
     window.history.replaceState({}, '', url);
-    renderChips();
+    renderFilters();
     load();
   }));
 }
 
 async function load() {
   const grid = document.getElementById('productGrid');
-  grid.innerHTML = Array.from({ length: 8 }).map(() => '<div class="skeleton" style="height:380px"></div>').join('');
+  grid.innerHTML = Array.from({ length: 8 }).map(() => '<div class="skeleton" style="aspect-ratio:3/4"></div>').join('');
   const params = new URLSearchParams();
   const category = qs('category'); if (category) params.set('category', category);
-  const q = qs('q'); if (q) params.set('q', q);
-  const min = document.getElementById('minPrice').value; if (min) params.set('min', min);
-  const max = document.getElementById('maxPrice').value; if (max) params.set('max', max);
-  const sort = document.getElementById('sortSelect').value; if (sort) params.set('sort', sort);
+  const q = document.getElementById('shopSearch')?.value.trim(); if (q) params.set('q', q);
+  const sort = document.getElementById('sortSelect')?.value; if (sort) params.set('sort', sort);
   const products = await api.get(`/products?${params}`);
   grid.innerHTML = products.length ? products.map(productCard).join('')
-    : '<div class="empty-state"><p>No products match your filters.</p></div>';
+    : '<div class="empty-state"><p>No pieces match your search.</p></div>';
   wireProductCards();
 }
 

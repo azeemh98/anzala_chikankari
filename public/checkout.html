@@ -3,94 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checkout | Anzala Chikankari</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Checkout | ANJALA Chikankari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <div id="headerMount"></div>
 
-<section class="section container" id="checkoutRoot">
-  <h1 class="section-title" style="font-size:32px;text-align:left;">Checkout</h1>
+<section class="section" style="padding-top:40px;">
+  <div class="wrap" id="checkoutRoot">
+    <h1 class="serif" style="font-size:32px;margin-bottom:6px;">Checkout</h1>
+    <p style="opacity:.65;font-size:13px;margin-bottom:30px;" id="checkoutSub">Shipping worldwide</p>
+  </div>
 </section>
 
 <div id="footerMount"></div>
 <script src="/js/app.js"></script>
 <script>
 let quote = null;
+let cartItems = null;
 let payMethod = 'cod';
 
 async function init() {
   await mountChrome('shop');
   const items = Cart.read();
   if (!items.length) {
-    document.getElementById('checkoutRoot').innerHTML += `<div class="empty-state"><p>Your bag is empty.</p><a class="btn btn-dark" href="/shop.html">Shop Now</a></div>`;
+    document.getElementById('checkoutRoot').insertAdjacentHTML('beforeend', `<div class="empty-state"><p>Your bag is empty.</p><a class="btn btn-primary" href="/shop.html">Shop Now</a></div>`);
     return;
   }
-  quote = await api.post('/cart/quote', { items, coupon: sessionStorage.getItem('anzala_coupon') || undefined });
+  cartItems = items;
+  const withLineIds = items.map(({ lineId, ...rest }) => rest);
+  quote = await api.post('/cart/quote', { items: withLineIds, coupon: sessionStorage.getItem('anzala_coupon') || undefined });
   if (!quote.lines.length) {
-    document.getElementById('checkoutRoot').innerHTML += `<div class="empty-state"><p>The items in your bag are no longer available.</p><a class="btn btn-dark" href="/shop.html">Shop Now</a></div>`;
+    document.getElementById('checkoutRoot').insertAdjacentHTML('beforeend', `<div class="empty-state"><p>The items in your bag are no longer available.</p><a class="btn btn-primary" href="/shop.html">Shop Now</a></div>`);
     return;
   }
+  document.getElementById('checkoutSub').textContent = `Shipping worldwide · ${quote.lines.reduce((a, l) => a + l.qty, 0)} item(s)`;
   renderForm();
 }
+
+const COUNTRIES = ['India', 'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'United Arab Emirates', 'Singapore', 'Other'];
 
 function renderForm() {
   const u = Auth.user;
   document.getElementById('checkoutRoot').insertAdjacentHTML('beforeend', `
     <div class="checkout-grid">
       <div class="form-card">
-        <h3 style="margin-top:0;">Delivery Details</h3>
+        <h3 class="serif" style="font-size:22px;margin-bottom:18px;">Shipping Details</h3>
         <form id="checkoutForm">
-          <div class="form-row"><label>Full Name</label><input name="name" value="${esc(u?.name || '')}" required></div>
-          <div class="form-cols">
-            <div class="form-row"><label>Email</label><input type="email" name="email" value="${esc(u?.email || '')}" required></div>
-            <div class="form-row"><label>Phone</label><input name="phone" value="${esc(u?.phone || '')}" placeholder="10-digit mobile" required></div>
+          <div class="form-grid">
+            <div class="field full"><label>Full Name</label><input name="name" value="${esc(u?.name || '')}" required></div>
+            <div class="field full"><label>Email</label><input type="email" name="email" value="${esc(u?.email || '')}" required></div>
+            <div class="field full"><label>Phone (with country code if outside India)</label><input name="phone" value="${esc(u?.phone || '')}" required></div>
+            <div class="field full"><label>Street Address</label><input name="address" required></div>
+            <div class="field"><label>City</label><input name="city" required></div>
+            <div class="field"><label>State / Region</label><input name="state" required></div>
+            <div class="field"><label>Postal / ZIP Code</label><input name="pincode" required></div>
+            <div class="field">
+              <label>Country</label>
+              <select name="country" required>${COUNTRIES.map(c => `<option ${c === 'India' ? 'selected' : ''}>${c}</option>`).join('')}</select>
+            </div>
           </div>
-          <div class="form-row"><label>Address</label><textarea name="address" rows="2" required></textarea></div>
-          <div class="form-cols">
-            <div class="form-row"><label>City</label><input name="city" required></div>
-            <div class="form-row"><label>State</label><input name="state" required></div>
-          </div>
-          <div class="form-row" style="max-width:200px;"><label>Pincode</label><input name="pincode" maxlength="6" required></div>
-          <div class="form-row"><label>Order Notes (optional)</label><textarea name="notes" rows="2" placeholder="e.g. gift wrap, delivery instructions"></textarea></div>
+          <div class="field full"><label>Order Notes (optional)</label><textarea name="notes" rows="2" placeholder="e.g. gift wrap, delivery instructions"></textarea></div>
 
-          <h3>Payment Method</h3>
-          <div class="pay-options">
-            <div class="pay-option active" data-method="cod"><strong>💵 Cash on Delivery</strong><p style="font-size:12px;color:#999;margin:6px 0 0;">Pay when it arrives</p></div>
-            <div class="pay-option" data-method="upi"><strong>📱 UPI</strong><p style="font-size:12px;color:#999;margin:6px 0 0;">Pay via ${esc(SETTINGS.upi_id)}</p></div>
+          <div class="divider-label">Payment Method</div>
+          <div class="payment-methods" id="paymentMethods">
+            <button type="button" class="pm-option active" data-method="cod">Cash on Delivery<br><span style="font-size:10.5px;opacity:.7;">India only</span></button>
+            <button type="button" class="pm-option" data-method="upi">Bank / UPI Transfer<br><span style="font-size:10.5px;opacity:.7;">Worldwide</span></button>
           </div>
-          <div id="upiBox" style="display:none;background:#fdf9f0;border-radius:8px;padding:16px;margin-bottom:16px;font-size:13px;">
-            Please pay <strong>${money(quote.total)}</strong> to UPI ID <strong>${esc(SETTINGS.upi_id)}</strong> and mention your name in the note. Our team will confirm your payment before dispatch.
+          <div id="paymentFields"></div>
+
+          <div class="order-summary">
+            ${quote.lines.map(l => `<div class="sub-row"><span>${esc(l.name)}${l.custom_text ? ` ("${esc(l.custom_text)}")` : ''} × ${l.qty}</span><span>${money(l.line_total)}</span></div>`).join('')}
+            <div class="sub-row" style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px;"><span>Subtotal</span><span>${money(quote.subtotal)}</span></div>
+            ${quote.discount ? `<div class="sub-row"><span>Discount (${esc(quote.coupon.code)})</span><span>−${money(quote.discount)}</span></div>` : ''}
+            <div class="sub-row"><span>Shipping</span><span>${quote.shipping ? money(quote.shipping) : 'Free'}</span></div>
+            <div class="sub-row total"><span>Total</span><span>${money(quote.total)}</span></div>
           </div>
+
           <p class="field-error" id="checkoutError"></p>
-          <button class="btn btn-primary btn-block" type="submit" id="placeOrderBtn">Place Order — ${money(quote.total)}</button>
+          <button class="btn btn-primary btn-block" type="submit" id="placeOrderBtn" style="margin-top:22px;">Place Order — ${money(quote.total)}</button>
         </form>
       </div>
       <div class="summary-card">
-        <h3 style="margin-top:0;">Order Summary</h3>
+        <h3 class="serif" style="font-size:20px;margin-bottom:16px;">Order Summary</h3>
         ${quote.lines.map(l => `
-          <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee;">
-            <img src="${esc(l.image || '')}" style="width:52px;height:66px;object-fit:cover;border-radius:6px;">
+          <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);">
+            <img src="${esc(l.image || '')}" style="width:52px;height:66px;object-fit:cover;border-radius:2px;">
             <div style="flex:1;font-size:13px;">
               <div>${esc(l.name)}</div>
-              <div style="color:#999;">${l.size ? `Size ${l.size} · ` : ''}Qty ${l.qty}</div>
+              <div style="opacity:.6;">${l.size && l.size !== 'One Size' ? `Size ${esc(l.size)} · ` : ''}Qty ${l.qty}</div>
+              ${l.custom_text ? `<div style="color:var(--leaf);font-style:italic;font-size:12px;">"${esc(l.custom_text)}"</div>` : ''}
             </div>
             <div style="font-size:13px;font-weight:600;">${money(l.line_total)}</div>
           </div>`).join('')}
-        <div class="summary-row" style="margin-top:14px;"><span>Subtotal</span><span>${money(quote.subtotal)}</span></div>
-        ${quote.discount ? `<div class="summary-row"><span>Discount (${quote.coupon.code})</span><span>−${money(quote.discount)}</span></div>` : ''}
-        <div class="summary-row"><span>Shipping</span><span>${quote.shipping ? money(quote.shipping) : 'FREE'}</span></div>
-        <div class="summary-row total"><span>Total</span><span>${money(quote.total)}</span></div>
       </div>
     </div>`);
 
-  document.querySelectorAll('.pay-option').forEach(opt => opt.addEventListener('click', () => {
-    document.querySelectorAll('.pay-option').forEach(o => o.classList.remove('active'));
+  document.querySelectorAll('.pm-option').forEach(opt => opt.addEventListener('click', () => {
+    document.querySelectorAll('.pm-option').forEach(o => o.classList.remove('active'));
     opt.classList.add('active');
     payMethod = opt.dataset.method;
-    document.getElementById('upiBox').style.display = payMethod === 'upi' ? 'block' : 'none';
+    renderPaymentFields(payMethod);
   }));
+  renderPaymentFields('cod');
 
   document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -100,8 +118,8 @@ function renderForm() {
     try {
       const order = await api.post('/orders', {
         name: f.get('name'), email: f.get('email'), phone: f.get('phone'), address: f.get('address'),
-        city: f.get('city'), state: f.get('state'), pincode: f.get('pincode'), notes: f.get('notes'),
-        payment_method: payMethod, items: Cart.read(), coupon: quote.coupon?.code, expected_total: quote.total,
+        city: f.get('city'), state: f.get('state'), pincode: f.get('pincode'), country: f.get('country'), notes: f.get('notes'),
+        payment_method: payMethod, items: cartItems.map(({ lineId, ...rest }) => rest), coupon: quote.coupon?.code, expected_total: quote.total,
       });
       Cart.clear();
       sessionStorage.removeItem('anzala_coupon');
@@ -111,6 +129,15 @@ function renderForm() {
       btn.disabled = false; btn.textContent = `Place Order — ${money(quote.total)}`;
     }
   });
+}
+
+function renderPaymentFields(method) {
+  const el = document.getElementById('paymentFields');
+  if (method === 'cod') {
+    el.innerHTML = `<div class="pm-note">Pay in cash when your order arrives. Available for addresses within India only.</div>`;
+  } else {
+    el.innerHTML = `<div class="pm-note">Bank/UPI transfer details (${esc(SETTINGS.upi_id)}) will be emailed to you after you place this order. Your order ships once the transfer is confirmed, usually within 1–2 business days.</div>`;
+  }
 }
 
 init();

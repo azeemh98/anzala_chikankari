@@ -3,43 +3,131 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anzala Chikankari | Luxury Lucknowi Fashion</title>
-<meta name="description" content="Handcrafted chikankari kurtis, sarees, suits and bridal wear from the heart of Lucknow.">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>ANJALA — Lucknowi Chikankari &amp; Hand-Embroidered Name Art</title>
+<meta name="description" content="Hand-embroidered Lucknowi chikankari clothing and personalized name art, made by artisans in Lucknow, India and shipped worldwide. Est. 2016.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <div id="headerMount"></div>
 
-<section class="hero">
-  <div>
-    <h1>The Art Of Chikankari</h1>
-    <p>Handcrafted Luxury From The Heart Of Lucknow</p>
-    <div class="hero-actions">
-      <a href="/shop.html" class="btn btn-primary">Explore Collection</a>
-      <a href="/booking.html" class="btn btn-outline" style="color:#fff;border-color:#fff;">Book an Appointment</a>
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <svg class="hero-texture"><rect width="100%" height="100%" fill="url(#chikanTileIndigo)"/></svg>
+    <div>
+      <span class="eyebrow">Lucknow, India · Est. 2016</span>
+      <h1>Hand-embroidered <em>Chikankari</em>,<br>shipped to your door, worldwide.</h1>
+      <p>Founded in 2016, ANJALA works with master artisans in Lucknow using chikankari needle techniques passed down for over 200 years. Breathable cotton and georgette clothing, plus hand-embroidered personalized name art — shipped to customers worldwide.</p>
+      <div class="hero-ctas">
+        <a href="/shop.html" class="btn btn-primary">Shop the Collection</a>
+        <a href="/shop.html?category=personalized-name-art" class="btn btn-outline">Personalized Name Art</a>
+      </div>
+    </div>
+    <div class="hero-art">
+      <svg class="hero-art-corner tl" viewBox="0 0 100 100"><use href="#motif-paisley"/></svg>
+      <svg class="hero-art-corner tr" viewBox="0 0 100 100"><use href="#motif-paisley"/></svg>
+      <svg class="hero-art-corner bl" viewBox="0 0 100 100"><use href="#motif-paisley"/></svg>
+      <svg class="hero-art-corner br" viewBox="0 0 100 100"><use href="#motif-paisley"/></svg>
+      <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80" alt="Hand-embroidered chikankari garment">
+    </div>
+  </div>
+  <div class="trust-strip">
+    <div class="wrap">
+      <span>100% Hand-Embroidered</span>
+      <span id="freeShipLabel">Free Worldwide Shipping</span>
+      <span>Ships from India in 3–7 Days</span>
+      <span>Custom Name Art Available</span>
+      <span>Trusted Since 2016</span>
+      <span>Easy 15-Day Returns</span>
     </div>
   </div>
 </section>
 
-<section class="section container">
-  <h2 class="section-title">Shop by Category</h2>
-  <p class="section-sub">Every piece hand-embroidered by master artisans</p>
-  <div class="categories" id="categories"></div>
+<div class="motif-divider"><svg><rect width="100%" height="100%" fill="url(#chikanTileGold)"/></svg></div>
+
+<section class="section" id="shop-preview">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow-row">
+        <svg class="flourish-icon" viewBox="0 0 100 100"><use href="#motif-paisley"/></svg>
+        <span class="eyebrow">Shop by Category</span>
+        <svg class="flourish-icon flip" viewBox="0 0 100 100"><use href="#motif-paisley"/></svg>
+      </div>
+      <h2>Every Piece Hand-Embroidered by Master Artisans</h2>
+    </div>
+    <div class="categories" id="categories"></div>
+  </div>
 </section>
 
-<section class="section container">
-  <h2 class="section-title">Featured Collection</h2>
-  <p class="section-sub">This season's most-loved pieces</p>
-  <div class="product-grid" id="featured"></div>
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Made by Hand, Worn Anywhere</h2>
+      <p>Hand-picked kurtas, sarees, anarkalis and co-ord sets, now alongside hand-embroidered personalized name frames.</p>
+    </div>
+    <div class="grid" id="featured"></div>
+  </div>
 </section>
 
-<section class="section" style="background:#fff;">
-  <div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:30px;text-align:center;">
-    <div><div style="font-size:34px;">🧵</div><h3 style="margin:10px 0 6px;font-size:17px;">100% Handcrafted</h3><p style="color:#6b6558;font-size:13px;">Every stitch done by hand by Lucknow's finest artisans.</p></div>
-    <div><div style="font-size:34px;">🚚</div><h3 style="margin:10px 0 6px;font-size:17px;">Pan-India Delivery</h3><p style="color:#6b6558;font-size:13px;">Free shipping above ₹2,999. Cash on delivery available.</p></div>
-    <div><div style="font-size:34px;">📅</div><h3 style="margin:10px 0 6px;font-size:17px;">Book an Appointment</h3><p style="color:#6b6558;font-size:13px;">Visit our Chowk boutique or a video-call fitting session.</p></div>
-    <div><div style="font-size:34px;">↩️</div><h3 style="margin:10px 0 6px;font-size:17px;">Easy Returns</h3><p style="color:#6b6558;font-size:13px;">7-day easy exchange on all ready-to-wear pieces.</p></div>
+<!-- ===================== PERSONALIZED NAME ART BAND ===================== -->
+<section class="personal-band" id="personal">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow-row" style="justify-content:flex-start;">
+        <svg class="flourish-icon" viewBox="0 0 100 100" style="color:var(--leaf);"><use href="#motif-paisley"/></svg>
+        <span class="eyebrow">New — Made to Order</span>
+      </div>
+      <h2>Hand-embroidered name art, stitched just for them.</h2>
+      <p>The same chikankari needlework that goes into our clothing also goes into these framed keepsakes — a name, a baby's name, a wedding date, hand-stitched onto linen and set in reclaimed wood. A gift that's genuinely one of a kind.</p>
+      <a href="/shop.html?category=personalized-name-art" class="btn btn-primary">Shop Name Art</a>
+    </div>
+    <div class="personal-frames" id="personalPreview"></div>
+  </div>
+</section>
+
+<!-- ===================== CRAFT STORY ===================== -->
+<section class="craft" id="craft">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow-row" style="justify-content:flex-start;">
+        <svg class="flourish-icon" viewBox="0 0 100 100"><use href="#motif-jaali"/></svg>
+        <span class="eyebrow" style="color:var(--gold)">Our Craft</span>
+      </div>
+      <h2>200 years of needlework, one thread at a time.</h2>
+      <p>Chikankari began in the courts of Lucknow and is still worked entirely by hand today. Each ANJALA piece passes through an artisan's hands for 3 to 10 days — outlined in <em>kachche taanka</em>, filled with dozens of traditional stitches, then washed and pressed by hand.</p>
+      <p>We work directly with embroidery clusters around Lucknow, paying artisans fairly for every hour of handwork that goes into your order.</p>
+      <div class="craft-stats">
+        <div><b>200+</b><span>Years of Heritage</span></div>
+        <div><b>40+</b><span>Artisan Families</span></div>
+        <div><b>36</b><span>Hand Stitch Styles</span></div>
+      </div>
+    </div>
+    <div class="craft-art"><svg viewBox="0 0 100 100"><use href="#motif-paisley"/></svg></div>
+  </div>
+</section>
+
+<div class="motif-divider"><svg><rect width="100%" height="100%" fill="url(#chikanTileGold)"/></svg></div>
+
+<!-- ===================== SHIPPING ===================== -->
+<section class="ship" id="shipping">
+  <div class="wrap">
+    <div class="ship-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.4"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z" stroke-linejoin="round"/><circle cx="7" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg>
+      <h3>Ships Direct from Lucknow</h3>
+      <p>Every order is packed by hand and shipped worldwide — 3–7 business days to the US, UK, Canada and Australia; 5–12 days elsewhere, via tracked courier.</p>
+    </div>
+    <div class="ship-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.4"><path d="M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7z" stroke-linejoin="round"/></svg>
+      <h3>Pay on Delivery or by Bank Transfer</h3>
+      <p>Cash on delivery within India, or a simple bank/UPI transfer for international orders — we'll confirm your payment before your order ships.</p>
+    </div>
+    <div class="ship-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.4"><path d="M3 12l6 6L21 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h3>15-Day Easy Returns</h3>
+      <p>Free size exchanges, and returns accepted within 15 days of delivery worldwide. Made-to-order name art is final sale.</p>
+    </div>
   </div>
 </section>
 
@@ -49,6 +137,8 @@
 <script>
 async function loadHome() {
   await mountChrome('home');
+  document.getElementById('freeShipLabel').textContent = `Free Worldwide Shipping Over ${money(Number(SETTINGS.free_shipping_min))}`;
+
   const cats = await api.get('/categories');
   document.getElementById('categories').innerHTML = cats.map(c => `
     <a class="category-card" href="/shop.html?category=${c.slug}">
@@ -61,6 +151,11 @@ async function loadHome() {
     ? products.map(productCard).join('')
     : '<p class="empty-state">No featured products yet.</p>';
   wireProductCards();
+
+  const personal = await api.get('/products?category=personalized-name-art');
+  document.getElementById('personalPreview').innerHTML = personal.slice(0, 3).map(p => `
+    <a class="personal-frame" href="/product.html?slug=${p.slug}"><img src="${esc(p.images[0] || '')}" alt="${esc(p.name)}" loading="lazy"></a>
+  `).join('');
 }
 loadHome();
 </script>

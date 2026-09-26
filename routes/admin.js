@@ -112,6 +112,7 @@ module.exports = function adminRoutes(db) {
       images: JSON.stringify(images),
       featured: !!body.featured,
       active: body.active !== false,
+      personalizable: !!body.personalizable,
     };
   }
 
@@ -119,9 +120,9 @@ module.exports = function adminRoutes(db) {
     const p = productPayload(req.body, null);
     if (await db.get('SELECT 1 FROM products WHERE slug = ?', [p.slug])) p.slug = `${p.slug}-${Date.now().toString(36)}`;
     const { rows } = await db.run(`INSERT INTO products
-      (name, slug, category_id, description, fabric, price, compare_price, stock, sizes, images, featured, active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
-      [p.name, p.slug, p.category_id, p.description, p.fabric, p.price, p.compare_price, p.stock, p.sizes, p.images, p.featured, p.active]);
+      (name, slug, category_id, description, fabric, price, compare_price, stock, sizes, images, featured, active, personalizable)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+      [p.name, p.slug, p.category_id, p.description, p.fabric, p.price, p.compare_price, p.stock, p.sizes, p.images, p.featured, p.active, p.personalizable]);
     res.status(201).json(v.parseProduct(await db.get('SELECT * FROM products WHERE id = ?', [rows[0].id])));
   }));
 
@@ -130,8 +131,8 @@ module.exports = function adminRoutes(db) {
     if (!existing) throw new v.HttpError(404, 'Product not found.');
     const p = productPayload(req.body, existing);
     await db.run(`UPDATE products SET name=?, slug=?, category_id=?, description=?, fabric=?,
-      price=?, compare_price=?, stock=?, sizes=?, images=?, featured=?, active=? WHERE id=?`,
-      [p.name, p.slug, p.category_id, p.description, p.fabric, p.price, p.compare_price, p.stock, p.sizes, p.images, p.featured, p.active, existing.id]);
+      price=?, compare_price=?, stock=?, sizes=?, images=?, featured=?, active=?, personalizable=? WHERE id=?`,
+      [p.name, p.slug, p.category_id, p.description, p.fabric, p.price, p.compare_price, p.stock, p.sizes, p.images, p.featured, p.active, p.personalizable, existing.id]);
     res.json(v.parseProduct(await db.get('SELECT * FROM products WHERE id = ?', [existing.id])));
   }));
 

@@ -83,7 +83,7 @@ test('public catalogue is browsable', async () => {
 test('cart quote computes shipping and rejects a bad coupon', async () => {
   const req = client();
   const products = (await req('GET', '/api/products')).data;
-  const cheap = products.find((p) => p.price < 2999);
+  const cheap = products.find((p) => !p.personalizable && p.price < 100);
   const quote = await req('POST', '/api/cart/quote', { items: [{ product_id: cheap.id, qty: 1, size: cheap.sizes[0] || null }] });
   assert.equal(quote.status, 200);
   assert.equal(quote.data.shipping > 0, true);
@@ -99,7 +99,7 @@ test('register, order placement, stock decrement and self-cancel', async () => {
   assert.equal(reg.status, 201);
 
   const products = (await req('GET', '/api/products')).data;
-  const target = products.find((p) => p.stock > 1);
+  const target = products.find((p) => !p.personalizable && p.stock > 1);
   const size = target.sizes[0] || null;
 
   const order = await req('POST', '/api/orders', {
@@ -108,7 +108,7 @@ test('register, order placement, stock decrement and self-cancel', async () => {
     items: [{ product_id: target.id, qty: 1, size }],
   });
   assert.equal(order.status, 201);
-  assert.ok(order.data.order_no.startsWith('AZ'));
+  assert.ok(order.data.order_no.startsWith('ANJ'));
 
   const after1 = await req('GET', `/api/products/${target.slug}`);
   assert.equal(after1.data.stock, target.stock - 1);

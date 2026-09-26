@@ -3,20 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Product | Anzala Chikankari</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Product | ANJALA Chikankari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <div id="headerMount"></div>
 
-<section class="section container" id="pdpRoot">
-  <p style="color:#999">Loading…</p>
+<section class="section" style="padding-top:40px;">
+  <div class="wrap" id="pdpRoot">
+    <p style="color:#999">Loading…</p>
+  </div>
 </section>
 
-<section class="section container" id="relatedSection" style="display:none">
-  <h2 class="section-title">You May Also Like</h2>
-  <div class="product-grid" id="relatedGrid"></div>
+<section class="section" id="relatedSection" style="display:none;padding-top:0;">
+  <div class="wrap">
+    <div class="section-head"><h2>You May Also Like</h2></div>
+    <div class="grid" id="relatedGrid"></div>
+  </div>
 </section>
 
 <div id="footerMount"></div>
@@ -32,7 +38,7 @@ async function init() {
   try {
     product = await api.get(`/products/${slug}`);
   } catch (e) {
-    document.getElementById('pdpRoot').innerHTML = `<div class="empty-state"><p>${e.message}</p><a class="btn btn-dark" href="/shop.html">Back to Shop</a></div>`;
+    document.getElementById('pdpRoot').innerHTML = `<div class="empty-state"><p>${esc(e.message)}</p><a class="btn btn-primary" href="/shop.html">Back to Shop</a></div>`;
     return;
   }
   selectedSize = product.sizes[0] || null;
@@ -42,65 +48,73 @@ async function init() {
     document.getElementById('relatedGrid').innerHTML = product.related.map(productCard).join('');
     wireProductCards();
   }
+  if (window.location.hash === '#options') document.getElementById('pdpRoot').scrollIntoView({ behavior: 'smooth' });
 }
 
 function render() {
   const p = product;
-  document.title = `${p.name} | Anzala Chikankari`;
+  document.title = `${p.name} | ANJALA Chikankari`;
   document.getElementById('pdpRoot').innerHTML = `
     <div class="pdp">
       <div class="pdp-gallery">
         <div class="pdp-main-img"><img id="mainImg" src="${esc(p.images[0] || '')}" alt="${esc(p.name)}"></div>
-        ${p.images.length > 1 ? `<div class="pdp-thumbs">${p.images.map((img, i) => `<img src="${esc(img)}" class="${i === 0 ? 'active' : ''}" data-i="${i}">`).join('')}</div>` : ''}
+        ${p.images.length > 1 ? `<div class="pdp-thumbs" style="display:flex;gap:10px;margin-top:12px;">${p.images.map((img, i) => `<img src="${esc(img)}" style="width:70px;height:88px;object-fit:cover;border-radius:2px;cursor:pointer;border:2px solid ${i === 0 ? 'var(--gold)' : 'transparent'};" data-i="${i}">`).join('')}</div>` : ''}
       </div>
       <div class="pdp-info">
-        <p style="color:#b08b32;font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px;">${esc(p.category_name || '')}</p>
-        <h1>${esc(p.name)}</h1>
-        ${p.rating ? `<div class="rating-row">${starRow(p.rating)} ${p.rating} · ${p.review_count} review${p.review_count === 1 ? '' : 's'}</div>` : '<p style="color:#999;font-size:13px;">No reviews yet</p>'}
+        <div class="card-cat">${esc(p.category_name || '')}</div>
+        <h1 class="serif" style="font-size:32px;margin-bottom:6px;">${esc(p.name)}</h1>
+        ${p.rating ? `<div class="rating-row">${starRow(p.rating)} ${p.rating} · ${p.review_count} review${p.review_count === 1 ? '' : 's'}</div>` : '<p style="opacity:.6;font-size:13px;">No reviews yet</p>'}
         <div class="pdp-price">${money(p.price)} ${p.compare_price ? `<span class="price-compare">${money(p.compare_price)}</span>` : ''}</div>
-        <p style="color:#6b6558;font-size:14px;line-height:1.7;">${esc(p.description)}</p>
+        <p>${esc(p.description)}</p>
 
-        ${p.sizes.length ? `<div id="size"><strong style="font-size:13px;">Size</strong><div class="size-row" id="sizeRow">
-          ${p.sizes.map(s => `<button class="size-btn ${s === selectedSize ? 'active' : ''}" data-size="${esc(s)}">${esc(s)}</button>`).join('')}
-        </div></div>` : ''}
+        <div id="options">
+          ${p.personalizable ? `
+          <div class="personalize-box">
+            <label>Personalize with a name</label>
+            <input id="customText" type="text" maxlength="40" placeholder="e.g. Aria">
+            <div class="hint">Hand-embroidered exactly as typed.</div>
+          </div>` : ''}
 
-        <div class="qty-row">
-          <strong style="font-size:13px;">Quantity</strong>
-          <div class="qty-control">
-            <button id="qtyDec">−</button><span id="qtyVal">1</span><button id="qtyInc">+</button>
-          </div>
-          <span style="font-size:12px;color:#999;">${p.stock > 0 ? `${p.stock} in stock` : 'Out of stock'}</span>
+          ${p.sizes.length && p.sizes[0] !== 'One Size' ? `<strong style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;opacity:.65;">Size</strong><div class="size-row">
+            ${p.sizes.map(s => `<button class="size-btn ${s === selectedSize ? 'active' : ''}" data-size="${esc(s)}">${esc(s)}</button>`).join('')}
+          </div>` : ''}
         </div>
 
-        <div class="pdp-actions">
-          <button class="btn btn-dark" style="flex:1" id="addBtn" ${p.stock === 0 ? 'disabled' : ''}>${p.stock === 0 ? 'Sold Out' : 'Add To Bag'}</button>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
+          <strong style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;opacity:.65;">Quantity</strong>
+          <div class="qty-control"><button id="qtyDec">−</button><span id="qtyVal">1</span><button id="qtyInc">+</button></div>
+          <span style="font-size:12px;opacity:.6;">${p.stock > 0 ? `${p.stock} in stock` : 'Out of stock'}</span>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-bottom:26px;">
+          <button class="btn btn-primary" style="flex:1;justify-content:center;" id="addBtn" ${p.stock === 0 ? 'disabled' : ''}>${p.stock === 0 ? 'Sold Out' : `Add to Bag — ${money(p.price)}`}</button>
           <button class="btn btn-outline" id="wishBtn" data-wish="${p.id}">♡ Wishlist</button>
         </div>
 
         <div class="pdp-meta">
-          <p><strong>Fabric:</strong> ${esc(p.fabric || '—')}</p>
-          <p><strong>Care:</strong> Dry clean recommended to preserve hand embroidery.</p>
-          <p><strong>Delivery:</strong> Ships in 2–4 business days. Free shipping over ${money(SETTINGS.free_shipping_min)}.</p>
+          <div><b>Fabric:</b> ${esc(p.fabric || '—')}</div>
+          <div><b>Technique:</b> Hand chikankari embroidery</div>
+          <div><b>Made in:</b> Lucknow, India</div>
+          <div><b>Care:</b> ${p.personalizable ? 'Dust gently, keep out of direct sunlight' : 'Gentle hand wash / dry clean recommended'}</div>
+          <div><b>Shipping:</b> Ships in 2–4 business days. Free worldwide shipping over ${money(SETTINGS.free_shipping_min)}.</div>
         </div>
       </div>
     </div>
 
-    <div class="tabs">
-      <div class="tab active" data-tab="reviews">Reviews (${p.reviews.length})</div>
-    </div>
-    <div id="reviewsPanel">
+    <div style="border-top:1px solid var(--line);margin:50px 0 30px;padding-top:30px;">
+      <h3 class="serif" style="font-size:24px;margin-bottom:20px;">Reviews (${p.reviews.length})</h3>
       ${Auth.user ? `
-      <div class="review-form" style="margin-bottom:30px;max-width:500px;">
-        <div class="star-picker" id="starPicker">${[1,2,3,4,5].map(n => `<span data-n="${n}">★</span>`).join('')}</div>
-        <textarea id="reviewText" placeholder="Share your experience with this product…"></textarea>
+      <div class="personalize-box" style="max-width:500px;background:none;border:1px solid var(--line);">
+        <div class="star-picker" id="starPicker" style="display:flex;gap:4px;font-size:24px;cursor:pointer;margin-bottom:10px;">${[1,2,3,4,5].map(n => `<span data-n="${n}" style="color:#ddd;">★</span>`).join('')}</div>
+        <textarea id="reviewText" placeholder="Share your experience with this product…" style="width:100%;min-height:80px;padding:11px 13px;border:1px solid var(--line);border-radius:2px;font-family:inherit;background:#fff;"></textarea>
         <button class="btn btn-dark btn-sm" id="submitReview" style="margin-top:10px;">Submit Review</button>
-      </div>` : `<p style="font-size:13px;color:#999;margin-bottom:20px;"><a href="#" onclick="openAuthModal();return false;">Log in</a> to write a review.</p>`}
+      </div>` : `<p style="font-size:13px;opacity:.65;margin-bottom:20px;"><a href="#" onclick="openAuthModal();return false;" style="text-decoration:underline;">Log in</a> to write a review.</p>`}
       ${p.reviews.length ? p.reviews.map(r => `
-        <div class="review-item">
-          <strong>${esc(r.name)}</strong> ${r.verified ? '<span class="verified">✓ Verified Purchase</span>' : ''}
+        <div style="border-bottom:1px solid var(--line);padding:16px 0;">
+          <strong>${esc(r.name)}</strong> ${r.verified ? '<span style="color:var(--success);font-size:11px;margin-left:8px;">✓ Verified Purchase</span>' : ''}
           <div>${starRow(r.rating)}</div>
-          <p style="font-size:14px;margin:6px 0 0;">${esc(r.comment || '')}</p>
-        </div>`).join('') : '<p style="color:#999;font-size:14px;">Be the first to review this product.</p>'}
+          <p style="font-size:14px;margin:6px 0 0;opacity:.85;">${esc(r.comment || '')}</p>
+        </div>`).join('') : '<p style="opacity:.6;font-size:14px;">Be the first to review this product.</p>'}
     </div>`;
 
   wireInteractions();
@@ -109,8 +123,8 @@ function render() {
 function wireInteractions() {
   document.querySelectorAll('.pdp-thumbs img').forEach(img => img.addEventListener('click', () => {
     document.getElementById('mainImg').src = img.src;
-    document.querySelectorAll('.pdp-thumbs img').forEach(i => i.classList.remove('active'));
-    img.classList.add('active');
+    document.querySelectorAll('.pdp-thumbs img').forEach(i => i.style.borderColor = 'transparent');
+    img.style.borderColor = 'var(--gold)';
   }));
   document.querySelectorAll('.size-btn').forEach(btn => btn.addEventListener('click', () => {
     selectedSize = btn.dataset.size;
@@ -121,7 +135,12 @@ function wireInteractions() {
   document.getElementById('qtyDec')?.addEventListener('click', () => { qty = Math.max(1, qty - 1); document.getElementById('qtyVal').textContent = qty; });
   document.getElementById('addBtn')?.addEventListener('click', () => {
     if (product.sizes.length && !selectedSize) return toast('Please select a size', true);
-    Cart.add(product.id, selectedSize, qty);
+    let customText = null;
+    if (product.personalizable) {
+      customText = document.getElementById('customText').value.trim();
+      if (!customText) return toast('Please enter a name to embroider', true);
+    }
+    Cart.add(product.id, selectedSize, qty, customText);
     toast('Added to your bag');
   });
 
@@ -136,11 +155,9 @@ function wireInteractions() {
   });
 
   let chosenRating = 5;
-  document.querySelectorAll('#starPicker span').forEach(s => s.addEventListener('click', () => {
-    chosenRating = Number(s.dataset.n);
-    document.querySelectorAll('#starPicker span').forEach(x => x.classList.toggle('on', Number(x.dataset.n) <= chosenRating));
-  }));
-  document.querySelectorAll('#starPicker span').forEach(x => x.classList.toggle('on', Number(x.dataset.n) <= chosenRating));
+  const paint = () => document.querySelectorAll('#starPicker span').forEach(x => x.style.color = Number(x.dataset.n) <= chosenRating ? 'var(--gold)' : '#ddd');
+  document.querySelectorAll('#starPicker span').forEach(s => s.addEventListener('click', () => { chosenRating = Number(s.dataset.n); paint(); }));
+  paint();
   document.getElementById('submitReview')?.addEventListener('click', async () => {
     try {
       await api.post(`/products/${product.id}/reviews`, { rating: chosenRating, comment: document.getElementById('reviewText').value });

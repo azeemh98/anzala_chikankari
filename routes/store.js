@@ -9,7 +9,7 @@ const v = require('../lib/logic');
 
 const PUBLIC_SETTINGS = [
   'store_name', 'store_tagline', 'store_email', 'store_phone', 'store_address', 'whatsapp', 'upi_id',
-  'shipping_fee', 'free_shipping_min', 'booking_max_days_ahead',
+  'currency', 'currency_symbol', 'shipping_fee', 'free_shipping_min', 'booking_max_days_ahead',
 ];
 
 module.exports = function storeRoutes(db) {
@@ -158,12 +158,16 @@ module.exports = function storeRoutes(db) {
       phone: v.phone(b.phone),
       address: v.str(b.address, 'Address', { min: 5, max: 300 }),
       city: v.str(b.city, 'City', { max: 60 }),
-      state: v.str(b.state, 'State', { max: 60 }),
-      pincode: v.pincode(b.pincode),
+      state: v.str(b.state, 'State / Region', { max: 60 }),
+      pincode: v.postalCode(b.pincode),
+      country: v.country(b.country || 'India'),
       notes: v.str(b.notes, 'Notes', { max: 500, optional: true }),
     };
     const method = ['cod', 'upi'].includes(b.payment_method) ? b.payment_method : null;
     if (!method) throw new v.HttpError(400, 'Please choose a payment method.');
+    if (method === 'cod' && customer.country.toLowerCase() !== 'india') {
+      throw new v.HttpError(400, 'Cash on Delivery is only available for addresses in India. Please choose bank/UPI transfer.');
+    }
 
     const order = await db.tx(async (tdb) => {
       const q = await v.quote(tdb, b.items || [], b.coupon);
@@ -174,19 +178,19 @@ module.exports = function storeRoutes(db) {
         throw new v.HttpError(409, 'Prices in your bag have changed. Please review your order and try again.');
       }
 
-      const orderNo = v.reference('AZ');
+      const orderNo = v.reference('ANJ');
       const { rows } = await tdb.run(`INSERT INTO orders
-        (order_no, user_id, name, email, phone, address, city, state, pincode, subtotal, discount, shipping, total,
+        (order_no, user_id, name, email, phone, address, city, state, pincode, country, subtotal, discount, shipping, total,
          coupon_code, payment_method, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`, [
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`, [
         orderNo, req.user ? req.user.id : null, customer.name, customer.email, customer.phone, customer.address,
-        customer.city, customer.state, customer.pincode, q.subtotal, q.discount, q.shipping, q.total,
+        customer.city, customer.state, customer.pincode, customer.country, q.subtotal, q.discount, q.shipping, q.total,
         q.coupon ? q.coupon.code : null, method, customer.notes,
       ]);
       const orderId = rows[0].id;
       for (const l of q.lines) {
-        await tdb.run(`INSERT INTO order_items (order_id, product_id, name, image, size, price, qty)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`, [orderId, l.product_id, l.name, l.image, l.size, l.price, l.qty]);
+        await tdb.run(`INSERT INTO order_items (order_id, product_id, name, image, size, custom_text, price, qty)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [orderId, l.product_id, l.name, l.image, l.size, l.custom_text, l.price, l.qty]);
         const stockUpdate = await tdb.run('UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?', [l.qty, l.product_id, l.qty]);
         if (stockUpdate.changes !== 1) throw new v.HttpError(409, `${l.name} just sold out.`);
       }

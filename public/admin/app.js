@@ -18,7 +18,8 @@ const api = {
   del(url) { return this.req('DELETE', url); },
 };
 
-const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+let CURRENCY_SYMBOL = '$';
+const money = (n) => `${CURRENCY_SYMBOL}${Number(n || 0).toLocaleString('en-US')}`;
 const dt = (s) => new Date(s.replace(' ', 'T') + (s.includes('Z') ? '' : 'Z')).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 function toast(msg, isError) {
   const el = document.getElementById('adminToast');
@@ -45,6 +46,8 @@ let ME = null;
 async function boot() {
   ME = await api.get('/auth/me').catch(() => null);
   if (!ME || ME.role !== 'admin') return showLogin();
+  const settings = await api.get('/admin/settings').catch(() => null);
+  if (settings?.currency_symbol) CURRENCY_SYMBOL = settings.currency_symbol;
   showApp();
 }
 
@@ -57,7 +60,10 @@ function showLogin() {
     try {
       const user = await api.post('/auth/login', { email: f.get('email'), password: f.get('password') });
       if (user.role !== 'admin') throw new Error('This account does not have admin access.');
-      ME = user; showApp();
+      ME = user;
+      const settings = await api.get('/admin/settings').catch(() => null);
+      if (settings?.currency_symbol) CURRENCY_SYMBOL = settings.currency_symbol;
+      showApp();
     } catch (err) { document.getElementById('loginError').textContent = err.message; }
   }, { once: true });
 }
@@ -251,6 +257,7 @@ function productModal(existing) {
       </div>
       <div class="field checkbox-row"><input type="checkbox" name="featured" ${existing?.featured ? 'checked' : ''}> <label style="margin:0;">Featured on homepage</label></div>
       <div class="field checkbox-row"><input type="checkbox" name="active" ${existing?.active !== false ? 'checked' : ''}> <label style="margin:0;">Active (visible in store)</label></div>
+      <div class="field checkbox-row"><input type="checkbox" name="personalizable" ${existing?.personalizable ? 'checked' : ''}> <label style="margin:0;">Personalizable (customer enters a name to embroider)</label></div>
       <p class="field-error" id="prodError"></p>
       <button class="btn btn-gold" type="submit">${existing ? 'Save Changes' : 'Add Product'}</button>
     </form>`);
@@ -278,6 +285,7 @@ function productModal(existing) {
       name: fd.get('name'), category_id: fd.get('category_id') || null, fabric: fd.get('fabric'),
       description: fd.get('description'), price: fd.get('price'), compare_price: fd.get('compare_price') || null,
       stock: fd.get('stock'), sizes: fd.get('sizes'), images, featured: fd.get('featured') === 'on', active: fd.get('active') === 'on',
+      personalizable: fd.get('personalizable') === 'on',
     };
     try {
       if (existing) await api.put(`/admin/products/${existing.id}`, payload); else await api.post('/admin/products', payload);
@@ -330,9 +338,9 @@ async function orderModal(id) {
   const nextOptions = ORDER_NEXT[o.status] || [];
   openModal(`Order ${o.order_no}`, `
     <p><strong>${esc(o.name)}</strong> · ${esc(o.email)} · ${esc(o.phone)}</p>
-    <p style="font-size:13px;color:#666;">${esc(o.address)}, ${esc(o.city)}, ${esc(o.state)} - ${esc(o.pincode)}</p>
+    <p style="font-size:13px;color:#666;">${esc(o.address)}, ${esc(o.city)}, ${esc(o.state)} ${esc(o.pincode)}, ${esc(o.country || 'India')}</p>
     <div class="table-wrap" style="margin:14px 0;"><table><thead><tr><th>Item</th><th>Size</th><th>Qty</th><th>Price</th></tr></thead>
-    <tbody>${o.items.map((it) => `<tr><td>${esc(it.name)}</td><td>${it.size || '—'}</td><td>${it.qty}</td><td>${money(it.price)}</td></tr>`).join('')}</tbody></table></div>
+    <tbody>${o.items.map((it) => `<tr><td>${esc(it.name)}${it.custom_text ? `<br><span style="color:#5C7A4B;font-style:italic;font-size:12px;">"${esc(it.custom_text)}"</span>` : ''}</td><td>${it.size && it.size !== 'One Size' ? esc(it.size) : '—'}</td><td>${it.qty}</td><td>${money(it.price)}</td></tr>`).join('')}</tbody></table></div>
     <p>Subtotal: ${money(o.subtotal)} ${o.discount ? `· Discount: −${money(o.discount)}` : ''} · Shipping: ${o.shipping ? money(o.shipping) : 'Free'}</p>
     <p style="font-size:17px;font-weight:700;">Total: ${money(o.total)}</p>
     ${o.notes ? `<p style="font-size:13px;color:#666;">Notes: ${esc(o.notes)}</p>` : ''}
@@ -560,11 +568,15 @@ async function renderSettings() {
         <div class="field"><label>Store Address</label><textarea name="store_address" rows="2">${esc(s.store_address)}</textarea></div>
         <div class="field-row">
           <div class="field"><label>WhatsApp Number (with country code, no +)</label><input name="whatsapp" value="${esc(s.whatsapp)}"></div>
-          <div class="field"><label>UPI ID</label><input name="upi_id" value="${esc(s.upi_id)}"></div>
+          <div class="field"><label>Bank/UPI Reference (shown to customers)</label><input name="upi_id" value="${esc(s.upi_id)}"></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>Shipping Fee (₹)</label><input type="number" name="shipping_fee" value="${s.shipping_fee}"></div>
-          <div class="field"><label>Free Shipping Above (₹)</label><input type="number" name="free_shipping_min" value="${s.free_shipping_min}"></div>
+          <div class="field"><label>Currency Symbol</label><input name="currency_symbol" value="${esc(s.currency_symbol || '$')}" maxlength="3"></div>
+          <div class="field"><label>Currency Code</label><input name="currency" value="${esc(s.currency || 'USD')}" maxlength="6"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Shipping Fee (${esc(s.currency_symbol || '$')})</label><input type="number" name="shipping_fee" value="${s.shipping_fee}"></div>
+          <div class="field"><label>Free Shipping Above (${esc(s.currency_symbol || '$')})</label><input type="number" name="free_shipping_min" value="${s.free_shipping_min}"></div>
         </div>
         <h3 style="margin-top:26px;">Booking Engine</h3>
         <div class="field-row">

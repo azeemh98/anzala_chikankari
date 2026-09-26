@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Account | Anzala Chikankari</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>My Account | ANJALA Chikankari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -17,7 +19,7 @@
     <button class="btn btn-dark" onclick="openAuthModal()">Log In / Sign Up</button>
     <div class="form-card" style="max-width:420px;margin-top:24px;">
       <h3 style="margin-top:0;">Track an Order</h3>
-      <div class="form-row"><label>Order Number</label><input id="trackOrderNo" placeholder="e.g. AZ26..."></div>
+      <div class="form-row"><label>Order Number</label><input id="trackOrderNo" placeholder="e.g. ANJ26..."></div>
       <div class="form-row"><label>Email used at checkout</label><input id="trackEmail" type="email"></div>
       <button class="btn btn-outline btn-block" id="trackBtn">Track Order</button>
       <div id="trackResult" style="margin-top:16px;"></div>
@@ -148,7 +150,7 @@ function orderCard(o) {
         <div><strong>${o.order_no}</strong><br><span style="font-size:12px;color:#999;">${new Date(o.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</span></div>
         <span class="status-pill status-${o.status}">${o.status}</span>
       </div>
-      ${o.items.map(it => `<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;"><span>${esc(it.name)} ${it.size ? `(${esc(it.size)})` : ''} × ${it.qty}</span><span>${money(it.price * it.qty)}</span></div>`).join('')}
+      ${o.items.map(it => `<div style="font-size:13px;padding:4px 0;"><div style="display:flex;justify-content:space-between;"><span>${esc(it.name)} ${it.size && it.size !== 'One Size' ? `(${esc(it.size)})` : ''} × ${it.qty}</span><span>${money(it.price * it.qty)}</span></div>${it.custom_text ? `<div style="color:var(--leaf);font-style:italic;font-size:12px;">"${esc(it.custom_text)}"</div>` : ''}</div>`).join('')}
       <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #eee;">
         <strong>Total: ${money(o.total)}</strong>
         <span class="status-pill status-${o.payment_status}">${o.payment_status}</span>
