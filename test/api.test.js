@@ -140,7 +140,11 @@ test('booking slots respect capacity and reject a double-booked slot', async () 
   const req = client();
   const services = (await req('GET', '/api/services')).data;
   const service = services[0];
-  const date = new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10);
+  // Pick a date at least 5 days out that isn't Sunday (the store's default closed weekday) — a fixed
+  // +5-days offset intermittently landed on a Sunday and made this test flaky.
+  let probe = new Date(Date.now() + 5 * 86400000);
+  while (probe.getUTCDay() === 0) probe = new Date(probe.getTime() + 86400000);
+  const date = probe.toISOString().slice(0, 10);
 
   const slots = await req('GET', `/api/bookings/slots?date=${date}&service_id=${service.id}`);
   assert.equal(slots.status, 200);

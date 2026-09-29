@@ -8,6 +8,7 @@ const { slugify, getSettings, DEFAULT_SETTINGS } = require('../lib/db');
 const ah = require('../lib/asyncHandler');
 const v = require('../lib/logic');
 const { uploadImage } = require('../lib/storage');
+const email = require('../lib/email');
 const { cancelOrder } = require('./store');
 
 // Files are held in memory just long enough to stream to Supabase Storage — nothing touches local disk,
@@ -190,7 +191,9 @@ module.exports = function adminRoutes(db) {
       const paymentStatus = status === 'delivered' && order.payment_method === 'cod' ? 'paid' : order.payment_status;
       await db.run('UPDATE orders SET status = ?, tracking_no = ?, payment_status = ? WHERE id = ?', [status, tracking, paymentStatus, order.id]);
     }
-    res.json(await db.get('SELECT * FROM orders WHERE id = ?', [order.id]));
+    const updated = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
+    res.json(updated);
+    email.sendOrderStatusUpdate(updated).catch((err) => console.error('[email] status update notification failed:', err));
   }));
 
   r.put('/orders/:id/payment', ah(async (req, res) => {

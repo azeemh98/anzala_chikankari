@@ -6,6 +6,7 @@ const {
 const { getSettings } = require('../lib/db');
 const ah = require('../lib/asyncHandler');
 const v = require('../lib/logic');
+const email = require('../lib/email');
 
 const PUBLIC_SETTINGS = [
   'store_name', 'store_tagline', 'store_email', 'store_phone', 'store_address', 'whatsapp', 'upi_id',
@@ -198,6 +199,19 @@ module.exports = function storeRoutes(db) {
       return { order_no: orderNo, total: q.total, payment_method: method };
     });
     res.status(201).json(order);
+
+    // Fire confirmation/alert emails after responding — never let a slow or failing email provider
+    // delay or break checkout. Guarded separately: the response already went out, so any error here
+    // must only be logged, never passed to next() (that would throw on the already-sent response).
+    try {
+      const full = await db.get('SELECT * FROM orders WHERE order_no = ?', [order.order_no]);
+      full.items = await db.all('SELECT * FROM order_items WHERE order_id = ?', [full.id]);
+      const settings = await getSettings(db);
+      await Promise.all([
+        email.sendOrderConfirmation(full, settings.currency_symbol),
+        email.sendNewOrderAlert(full, settings.store_email, settings.currency_symbol),
+      ]);
+    } catch (err) { console.error('[email] order notification failed:', err); }
   }));
 
   async function orderWithItems(order) {
@@ -261,6 +275,11 @@ module.exports = function storeRoutes(db) {
         JOIN services s ON s.id = b.service_id WHERE booking_no = ?`, [bookingNo]);
     });
     res.status(201).json(booking);
+
+    try {
+      const settings = await getSettings(db);
+      await Promise.all([email.sendBookingConfirmation(booking), email.sendNewBookingAlert(booking, settings.store_email)]);
+    } catch (err) { console.error('[email] booking notification failed:', err); }
   }));
 
   r.get('/bookings', requireUser, ah(async (req, res) => {
